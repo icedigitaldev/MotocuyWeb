@@ -8,3 +8,14 @@ body{
     font-family: "Nunito Sans", serif;
 }
 
+
+/**  CLASES OPTIMIZADAS   **/
+.btn-primary {
+    @apply flex items-center gap-2.5 py-3 px-4 border-2 rounded-[8px] transition-colors duration-150 ease-in-out;
+    @apply text-[14px] md:text-[18px] font-normal leading-normal text-colorTextGeneral;
+    @apply bg-white dark:bg-colorsecundary;
+    @apply border-colorBorderButtonLigth dark:border-colorBorderButtonDark;
+    @apply dark:text-white;
+    @apply hover:bg-colorPrimary hover:text-white dark:hover:bg-colorsecundaryhover;
+}
+

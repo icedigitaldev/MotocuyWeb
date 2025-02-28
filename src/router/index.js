@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "@/modules/Login.vue";
-import AdminLayout from "@/layout/adminlayout/AdminLayout.vue"; // Layout principal del Admin
+import AdminLayout from "@/layout/adminlayout/AdminLayout.vue"; // Layout principal del admin
 import DashboardView from "@/modules/admin/views/DashboardView.vue";
 import PassengersView from "@/modules/admin/views/PassengersView.vue";
 import DriversView from "@/modules/admin/views/DriversView.vue";
