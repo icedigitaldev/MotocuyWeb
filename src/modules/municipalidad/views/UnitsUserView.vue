@@ -531,7 +531,7 @@ const openEditModal = (row) => {
       </div>
       <!-- FIN MINI-MODAL -->
     </main>
-  </section>}
+  </section>
 
   <UnitsAddDialog :isOpen="isAddModalOpen" @close="closeAddModal" />
 </template>
