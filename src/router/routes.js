@@ -1,27 +1,30 @@
 import { createRouter, createWebHistory } from "vue-router";
-import LoginView from "@/modules/Login.vue";
-import AdminLayout from "@/layout/adminlayout/AdminLayout.vue"; // Layout principal del admin
-import DashboardView from "@/modules/admin/views/DashboardView.vue";
-import PassengersView from "@/modules/admin/views/PassengersView.vue";
-import DriversView from "@/modules/admin/views/DriversView.vue";
-import ReportsComplaintsView from "@/modules/admin/views/ReportsComplaintsView.vue";
-import UsersView from "@/modules/admin/views/UsersView.vue";
-import PromotionsView from "@/modules/admin/views/PromotionsView.vue";
-import CampaignsView from "@/modules/admin/views/CampaignsView.vue";
-import PanicEventsView from "@/modules/admin/views/PanicEventsView.vue";
-import TrafficFlowView from "@/modules/admin/views/TrafficFlowView.vue";
-import ProfileView from "@/modules/admin/views/ProfileView.vue";
+import LoginViewView from "@/views/LoginView.vue";
+import AdminLayout from "@/layout/adminlayout/AdminLayout.vue";
+import DashboardView from "@/views/admin/DashboardView.vue";
+import PassengersView from "@/views/admin/PassengersView.vue";
+import DriversView from "@/views/admin/DriversView.vue";
+import ReportsComplaintsView from "@/views/admin/ReportsComplaintsView.vue";
+import UsersView from "@/views/admin/UsersView.vue";
+import PromotionsView from "@/views/admin/PromotionsView.vue";
+import CampaignsView from "@/views/admin/CampaignsView.vue";
+import PanicEventsView from "@/views/admin/PanicEventsView.vue";
+import TrafficFlowView from "@/views/admin/TrafficFlowView.vue";
+import ProfileView from "@/views/admin/ProfileView.vue";
 import UserLayout from "@/layout/userlayout/UserLayout.vue";
-import DashboardUserView from "@/modules/municipalidad/views/DashboardUserView.vue";
-import DriversUserView from "@/modules/municipalidad/views/DriversUserView.vue";
-import UnitsUserView from "@/modules/municipalidad/views/UnitsUserView.vue";
-import PanicEventUserView from "@/modules/municipalidad/views/PanicEventUserView.vue";
-import AlertsUserView from "@/modules/municipalidad/views/AlertsUserView.vue";
-import TrafficFlowUserView from "@/modules/municipalidad/views/TrafficFlowUserView.vue";
-import ProfileUserView from "@/modules/municipalidad/views/ProfileUserView.vue";
+import DashboardUserView from "@/views/municipalidad/DashboardUserView.vue";
+import DriversUserView from "@/views/municipalidad/DriversUserView.vue";
+import UnitsUserView from "@/views/municipalidad/UnitsUserView.vue";
+import PanicEventUserView from "@/views/municipalidad/PanicEventUserView.vue";
+import AlertsUserView from "@/views/municipalidad/AlertsUserView.vue";
+import TrafficFlowUserView from "@/views/municipalidad/TrafficFlowUserView.vue";
+import ProfileUserView from "@/views/municipalidad/ProfileUserView.vue";
+import MapsView from "@/views/MapsView.vue";
 
 const routes = [
-    { path: "/", component: LoginView },
+    { path: "/", component: LoginViewView },
+
+    { path: "/emergency", name: "Emergency", component: MapsView },
 
     {
         path: "/admin",

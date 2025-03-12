@@ -65,7 +65,7 @@ const togglePasswordVisibility = () => {
              <IconEyeOff v-else class="w-6 h-6" :stroke="2" />
            </button>
          </div>
-         <a href="/" class="colorText333 dark:text-white text-[12px] leading-[13px] font-normal ">¿Olvidaste tu contraseña?</a>
+         <a href="/public" class="colorText333 dark:text-white text-[12px] leading-[13px] font-normal ">¿Olvidaste tu contraseña?</a>
 
          <!-- Botón de Login -->
          <button
@@ -76,7 +76,7 @@ const togglePasswordVisibility = () => {
          </button>
 
          <div class="w-full text-center mt-6">
-           <span class="colorText333 dark:text-white font-normal text-[16px] leading-[27px] tracking-[0.32px]">¿No tienes una cuenta? <a href="/" class="text-colorPrimary">Contáctanos</a></span>
+           <span class="colorText333 dark:text-white font-normal text-[16px] leading-[27px] tracking-[0.32px]">¿No tienes una cuenta? <a href="/public" class="text-colorPrimary">Contáctanos</a></span>
          </div>
 
        </form>
