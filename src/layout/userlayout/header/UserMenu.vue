@@ -1,8 +1,8 @@
 <script setup>
-import IconLogo from '@/components/Icons/IconLogo.vue'
-import IconPrifile from '@/components/Icons/IconProfile.vue'
+import IconLogo from '@/components/icons/IconLogo.vue'
+import IconPrifile from '@/components/icons/IconProfile.vue'
 import { ref, onMounted, onUnmounted } from 'vue'
-import IconLogout from "@/components/Icons/IconLogout.vue";
+import IconLogout from "@/components/icons/IconLogout.vue";
 
 const dropdownOpen = ref(false)
 const dropdownRef = ref(null)
