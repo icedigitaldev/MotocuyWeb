@@ -1,18 +1,13 @@
 <script setup>
 import { ref, computed } from 'vue'
 import {
-  IconMap2,
   IconSearch,
   IconFilter,
   IconRotate2,
-  IconMapUp,
   IconEye
 } from '@tabler/icons-vue'
-import UniversalContainerLayout from '@/components/UniversalContainerLayout.vue';
+import AlertDialog from '@/modules/admin/dialogs/AlertDialog.vue';
 import FilterCardPanic from '@/modules/admin/components/FilterCardPanic.vue';
-import PanicDialog from '../../modules/admin/dialogs/PanicDialog.vue';
-
-
 
 const isDialogVisible = ref(false);
 
@@ -20,16 +15,13 @@ const openDialog = () => {
   isDialogVisible.value = true;
 };
 
-// ----- Modal (hipotético para "Mapa de calor") -----
-const openHeatMap = () => {
-  console.log('Abrir Mapa de calor')
-}
-
 // ----- Filtros -----
 // Buscador
 const searchQuery = ref('')
 // Filtro de estado
 const selectedState = ref('Estado')
+// Filtro de tipo
+const selectedTipo = ref('Tipo')
 // Filtro por fecha (exacta)
 const selectedFecha = ref('')
 
@@ -38,6 +30,7 @@ const handleSearch = () => {
   console.log('Filtros:', {
     search: searchQuery.value,
     estado: selectedState.value,
+    tipo: selectedTipo.value,
     fecha: selectedFecha.value
   })
 }
@@ -46,22 +39,23 @@ const handleSearch = () => {
 const resetFilters = () => {
   searchQuery.value = ''
   selectedState.value = 'Estado'
+  selectedTipo.value = 'Tipo'
   selectedFecha.value = ''
 }
 
 // ----- Datos de la tabla (simulados) -----
-// Ahora el array contiene: Código, Dirección, Fecha de Envío y Estado
+// Ahora el array contiene: Código, Dirección, Fecha de Envío, Estado y Tipo
 const tableData = ref([
-  { codigo: 'COD-001', direccion: 'Av. Principal 123', fechaEnvio: '2023-09-01', estado: 'Atendido' },
-  { codigo: 'COD-002', direccion: 'Jr. Secundario 456', fechaEnvio: '2023-09-02', estado: 'En Proceso' },
-  { codigo: 'COD-003', direccion: 'Calle Falsa 789', fechaEnvio: '2023-09-03', estado: 'Falsa Alarma' },
-  { codigo: 'COD-004', direccion: 'Av. Siempre Viva 742', fechaEnvio: '2023-09-04', estado: 'Pendiente' },
-  { codigo: 'COD-005', direccion: 'Pasaje Oculto 159', fechaEnvio: '2023-09-05', estado: 'Atendido' },
-  { codigo: 'COD-006', direccion: 'Av. Independencia 321', fechaEnvio: '2023-09-06', estado: 'En Proceso' },
-  { codigo: 'COD-007', direccion: 'Callejón 111', fechaEnvio: '2023-09-07', estado: 'Falsa Alarma' },
-  { codigo: 'COD-008', direccion: 'Carretera Central Km 22', fechaEnvio: '2023-09-08', estado: 'Pendiente' },
-  { codigo: 'COD-009', direccion: 'Av. Las Flores 999', fechaEnvio: '2023-09-09', estado: 'Atendido' },
-  { codigo: 'COD-010', direccion: 'Jr. Los Olivos 777', fechaEnvio: '2023-09-10', estado: 'Pendiente' }
+  { codigo: 'COD-001', direccion: 'Av. Principal 123', fechaEnvio: '2023-09-01', estado: 'Atendido', tipo: 'Robo' },
+  { codigo: 'COD-002', direccion: 'Jr. Secundario 456', fechaEnvio: '2023-09-02', estado: 'En Proceso', tipo: 'Incendio' },
+  { codigo: 'COD-003', direccion: 'Calle Falsa 789', fechaEnvio: '2023-09-03', estado: 'Falsa Alarma', tipo: 'Accidente de transito' },
+  { codigo: 'COD-004', direccion: 'Av. Siempre Viva 742', fechaEnvio: '2023-09-04', estado: 'Pendiente', tipo: 'Robo' },
+  { codigo: 'COD-005', direccion: 'Pasaje Oculto 159', fechaEnvio: '2023-09-05', estado: 'Atendido', tipo: 'Incendio' },
+  { codigo: 'COD-006', direccion: 'Av. Independencia 321', fechaEnvio: '2023-09-06', estado: 'En Proceso', tipo: 'Accidente de transito' },
+  { codigo: 'COD-007', direccion: 'Callejón 111', fechaEnvio: '2023-09-07', estado: 'Falsa Alarma', tipo: 'Robo' },
+  { codigo: 'COD-008', direccion: 'Carretera Central Km 22', fechaEnvio: '2023-09-08', estado: 'Pendiente', tipo: 'Incendio' },
+  { codigo: 'COD-009', direccion: 'Av. Las Flores 999', fechaEnvio: '2023-09-09', estado: 'Atendido', tipo: 'Accidente de transito' },
+  { codigo: 'COD-010', direccion: 'Jr. Los Olivos 777', fechaEnvio: '2023-09-10', estado: 'Pendiente', tipo: 'Robo' }
 ]);
 
 // ----- Filtrado -----
@@ -76,10 +70,13 @@ const filteredData = computed(() => {
     const matchesState =
         selectedState.value === 'Estado' ||
         item.estado.toLowerCase() === selectedState.value.toLowerCase();
+    const matchesTipo =
+        selectedTipo.value === 'Tipo' ||
+        item.tipo.toLowerCase() === selectedTipo.value.toLowerCase();
     const matchesFecha =
         selectedFecha.value === '' ||
         item.fechaEnvio === selectedFecha.value;
-    return matchesSearch && matchesState && matchesFecha;
+    return matchesSearch && matchesState && matchesTipo && matchesFecha;
   });
 });
 
@@ -112,20 +109,15 @@ const updatePageSize = (event) => {
   <section>
     <header class="flex justify-between items-center">
       <h1 class="text-colorText333 text-[28px] md:text-[32px] font-bold dark:text-white">
-        Pánico evento
+        Lista de alertas
       </h1>
-
-      <button @click="openHeatMap" class="btn-primary">
-        <IconMap2 class="font-bold" />
-        <span>Mapa de calor</span>
-      </button>
     </header>
 
     <FilterCardPanic class="mt-7"/>
 
-    <UniversalContainerLayout class="mt-7">
+    <main class="bg-white dark:bg-colorsecundary rounded-[20px] p-5 mt-7">
       <!-- Filtros -->
-      <div class="flex flex-col md:flex-row gap-2.5 md:gap-0 justify-between items-center">
+      <div class="flex flex-col lg:flex-row gap-2.5 lg:gap-0 justify-between items-center">
         <!-- Buscador -->
         <form @submit.prevent="handleSearch" class="lg:max-w-md w-full">
           <div class="relative">
@@ -160,12 +152,26 @@ const updatePageSize = (event) => {
               <option value="Pendiente">Pendiente</option>
             </select>
           </div>
+          
+          <div class="border-r border-gray-300 dark:border-gray-600 w-full flex-1">
+            <select
+                id="tipo"
+                v-model="selectedTipo"
+                class="w-full p-3 text-[12px] md:text-[14px] bg-transparent dark:bg-colorsecundary placeholder-gray-500 dark:placeholder-gray-400 border-none text-colorTextLight dark:text-white cursor-pointer appearance-none shadow-none focus:outline-none focus:ring-0 rounded-none"
+            >
+              <option value="Tipo" disabled>Tipo</option>
+              <option value="Robo">Robo</option>
+              <option value="Incendio">Incendio</option>
+              <option value="Accidente de transito">Accidente de transito</option>
+            </select>
+          </div>
+          
           <div class="border-r border-gray-300 dark:border-gray-600 w-full flex-1">
             <!-- Filtro por Fecha (única, exacta) -->
             <input
                 type="date"
                 v-model="selectedFecha"
-                class=" w-full p-3 text-[12px] md:text-[14px] bg-white dark:bg-colorsecundary placeholder-gray-500 dark:placeholder-gray-400 border-none text-colorTextLight dark:text-white cursor-pointer focus:ring-0 rounded-none"
+                class="w-full p-3 text-[12px] md:text-[14px] bg-transparent dark:bg-colorsecundary placeholder-gray-500 dark:placeholder-gray-400 border-none text-colorTextLight dark:text-white cursor-pointer focus:ring-0 rounded-none"
             />
           </div>
           <div
@@ -177,8 +183,9 @@ const updatePageSize = (event) => {
           </div>
         </div>
       </div>
+
       <!-- Tabla -->
-      <div>
+      <div class="mt-8">
         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
           <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -186,6 +193,7 @@ const updatePageSize = (event) => {
               <th scope="col" class="px-6 py-3">Código</th>
               <th scope="col" class="px-6 py-3">Dirección</th>
               <th scope="col" class="px-6 py-3">Fecha de Envío</th>
+              <th scope="col" class="px-6 py-3">Tipo</th>
               <th scope="col" class="px-6 py-3">Estado</th>
               <th scope="col" class="px-6 py-3">Acciones</th>
             </tr>
@@ -196,33 +204,14 @@ const updatePageSize = (event) => {
                 :key="index"
                 class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200"
             >
-              <td class="px-6 py-4">
-               <div class="flex items-center gap-2.5">
-                 <div
-                     :style="{
-                      backgroundColor:
-                        row.estado === 'Atendido'
-                          ? '#04CE5B'
-                          : row.estado === 'En Proceso'
-                          ? '#007BFF'
-                          : row.estado === 'Falsa Alarma'
-                          ? '#DC3545'
-                          : row.estado === 'Pendiente'
-                          ? '#FFA756'
-                          : '#000'
-                    }"
-                     class="p-2 rounded-full w-fit text-white">
-                   <IconMapUp class="w-5 h-5"/>
-                 </div>
-                 {{ row.codigo }}
-               </div>
-              </td>
+              <td class="px-6 py-4">{{ row.codigo }}</td>
               <td class="px-6 py-4">{{ row.direccion }}</td>
               <td class="px-6 py-4">{{ row.fechaEnvio }}</td>
+              <td class="px-6 py-4">{{ row.tipo }}</td>
               <td class="px-6 py-4">
-             <div class="flex justify-center">
-               <div
-                   :style="{
+                <div class="flex justify-center">
+                  <div
+                      :style="{
                       backgroundColor:
                         row.estado === 'Atendido'
                           ? '#04CE5B'
@@ -234,22 +223,21 @@ const updatePageSize = (event) => {
                           ? '#FFA756'
                           : '#000'
                     }"
-                   class="py-1.5 w-fit px-6 text-[12px] flex justify-center items-center rounded-[4.5px] text-white font-bold"
-               >
-                 {{ row.estado }}
-               </div>
-             </div>
+                      class="py-1.5 w-fit px-6 text-[12px] flex justify-center items-center rounded-[4.5px] text-white font-bold"
+                  >
+                    {{ row.estado }}
+                  </div>
+                </div>
               </td>
               <td class="px-6 py-4 flex justify-center items-center">
                 <div class="tooltip tooltip-left" data-tip="Atender">
                   <button
                       @click="openDialog"
-                      class="font-medium relative text-blue-600 p-[6px] border border-colorBorderButtonLigth dark:bg-[#323D4E] dark:border-gray-600 dark:text-white bg-[#FAFBFD] rounded-[8px]"
+                      class="font-medium text-blue-600 p-[6px] border border-colorBorderButtonLigth dark:bg-[#323D4E] dark:border-gray-600 dark:text-white bg-[#FAFBFD] rounded-[8px]"
                   >
                     <IconEye />
                   </button>
                 </div>
-
               </td>
             </tr>
             </tbody>
@@ -312,8 +300,10 @@ const updatePageSize = (event) => {
           </ul>
         </nav>
       </div>
-      <PanicDialog v-model:visible="isDialogVisible"/>
-    </UniversalContainerLayout>
+
+
+      <AlertDialog v-model:visible="isDialogVisible" />
+    </main>
   </section>
 </template>
 

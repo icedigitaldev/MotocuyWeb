@@ -11,6 +11,7 @@ import CampaignsView from "@/views/admin/CampaignsView.vue";
 import PanicEventsView from "@/views/admin/PanicEventsView.vue";
 import TrafficFlowView from "@/views/admin/TrafficFlowView.vue";
 import ProfileView from "@/views/admin/ProfileView.vue";
+
 import UserLayout from "@/layout/userlayout/UserLayout.vue";
 import DashboardUserView from "@/views/municipalidad/DashboardUserView.vue";
 import DriversUserView from "@/views/municipalidad/DriversUserView.vue";
@@ -19,7 +20,10 @@ import PanicEventUserView from "@/views/municipalidad/PanicEventUserView.vue";
 import AlertsUserView from "@/views/municipalidad/AlertsUserView.vue";
 import TrafficFlowUserView from "@/views/municipalidad/TrafficFlowUserView.vue";
 import ProfileUserView from "@/views/municipalidad/ProfileUserView.vue";
+import AlertAdminView from "@/views/admin/AlertAdminView.vue";
 import MapsView from "@/views/MapsView.vue";
+import InfoPassengersView from "@/views/admin/InfoPassengersView.vue";
+import InfoDriversView from "@/views/admin/InfoDriversView.vue";
 
 const routes = [
     { path: "/", component: LoginViewView },
@@ -38,8 +42,12 @@ const routes = [
             { path: "promotions", name: "AdminPromotions", component: PromotionsView },
             { path: "campaigns", name: "AdminCampaigns", component: CampaignsView },
             { path: "panic-events", name: "AdminPanicEvents", component: PanicEventsView },
+            { path: "alerts", name: "AdminAlerts", component: AlertAdminView },
             { path: "traffic-flow", name: "AdminTrafficFlow", component: TrafficFlowView },
             { path: "profile", name: "AdminProfile", component: ProfileView },
+
+            { path: "infopassenger", name: "InformationPassenger", component: InfoPassengersView },
+            { path: "infodriver", name: "InformationDriver", component: InfoDriversView },
         ],
     },
     {

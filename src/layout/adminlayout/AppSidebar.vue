@@ -1,6 +1,6 @@
 <script setup>
 import { useRoute } from "vue-router";
-import { IconDashboard, IconUsers, IconReport, IconCar, IconSettings, IconUrgent, IconCircleDashedPercentage, IconArrowsTransferUpDown, IconMap2,  IconArrowBadgeLeftFilled, IconArrowBadgeRightFilled } from "@tabler/icons-vue";
+import { IconDashboard, IconUsers, IconReport, IconCar, IconAlertSquareRounded, IconUrgent, IconCircleDashedPercentage, IconArrowsTransferUpDown, IconMap2,  IconArrowBadgeLeftFilled, IconArrowBadgeRightFilled } from "@tabler/icons-vue";
 import { useSidebar } from "@/composables/useSidebar.js";
 
 import {ref} from "vue";
@@ -19,6 +19,7 @@ const menuItems = [
   { icon: IconCircleDashedPercentage, name: "Promociones", path: "/admin/promotions" },
   { icon: IconMap2, name: "Campañas", path: "/admin/campaigns" },
   { icon: IconUrgent, name: "Pánico Evento", path: "/admin/panic-events" },
+  { icon: IconAlertSquareRounded, name: "Alertas", path: "/admin/alerts" },
   { icon: IconArrowsTransferUpDown, name: "Flujo de tráfico", path: "/admin/traffic-flow" },
 ];
 

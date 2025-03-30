@@ -5,9 +5,18 @@ import {
   IconSearch,
   IconFilter,
   IconRotate2,
-  IconEdit,
-  IconMapUp
+  IconMapUp,
+  IconEye
 } from '@tabler/icons-vue'
+import PanicResolveDialog from "@/modules/municipalidad/dialogs/PanicResolveDialog.vue";
+
+
+
+const isDialogVisible = ref(false);
+
+const openDialog = () => {
+  isDialogVisible.value = true;
+};
 
 // ----- Modal (hipotético para "Mapa de calor") -----
 const openHeatMap = () => {
@@ -95,18 +104,15 @@ const updatePageSize = (event) => {
   currentPage.value = 1;
 };
 
-// ----- Función para editar -----
-const editItem = (item) => {
-  console.log('Editar:', item);
-}
 </script>
 
 <template>
   <section>
     <header class="flex justify-between items-center">
-      <h1 class="text-colorText224 text-[28px] md:text-[32px] font-bold dark:text-white">
+      <h1 class="text-colorText333 text-[28px] md:text-[32px] font-bold dark:text-white">
         Pánico evento
       </h1>
+
       <button @click="openHeatMap" class="btn-primary">
         <IconMap2 class="font-bold" />
         <span>Mapa de calor</span>
@@ -154,7 +160,7 @@ const editItem = (item) => {
             <input
                 type="date"
                 v-model="selectedFecha"
-                class="w-full p-3 text-[12px] md:text-[14px] bg-transparent dark:bg-colorsecundary placeholder-gray-500 dark:placeholder-gray-400 border-none text-colorTextLight dark:text-white cursor-pointer focus:ring-0 rounded-none"
+                class=" w-full p-3 text-[12px] md:text-[14px] bg-white dark:bg-colorsecundary placeholder-gray-500 dark:placeholder-gray-400 border-none text-colorTextLight dark:text-white cursor-pointer focus:ring-0 rounded-none"
             />
           </div>
           <div
@@ -231,12 +237,15 @@ const editItem = (item) => {
              </div>
               </td>
               <td class="px-6 py-4 flex justify-center items-center">
-                <button
-                    @click="editItem(row)"
-                    class="font-medium text-blue-600 p-[6px] border border-colorBorderButtonLigth dark:bg-[#323D4E] dark:border-gray-600 dark:text-white bg-[#FAFBFD] rounded-[8px]"
-                >
-                  <IconEdit />
-                </button>
+                <div class="tooltip tooltip-left" data-tip="Atender">
+                  <button
+                      @click="openDialog"
+                      class="font-medium relative text-blue-600 p-[6px] border border-colorBorderButtonLigth dark:bg-[#323D4E] dark:border-gray-600 dark:text-white bg-[#FAFBFD] rounded-[8px]"
+                  >
+                    <IconEye />
+                  </button>
+                </div>
+
               </td>
             </tr>
             </tbody>
@@ -299,6 +308,9 @@ const editItem = (item) => {
           </ul>
         </nav>
       </div>
+
+
+      <PanicResolveDialog v-model:visible="isDialogVisible"/>
     </main>
   </section>
 </template>
