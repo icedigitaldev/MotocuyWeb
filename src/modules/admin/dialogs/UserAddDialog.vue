@@ -1,6 +1,11 @@
 <script setup>
-import {defineProps, defineEmits, ref} from 'vue';
+import {defineProps, defineEmits, ref, computed, watch} from 'vue';
 import {IconX, IconDeviceFloppy, IconUserCircle, IconEye, IconEyeOff} from '@tabler/icons-vue'
+
+// Importar datos JSON
+import departamentos from '@/data/json-ubigeo/ubigeo_peru_2016_departamentos.json'
+import provincias from '@/data/json-ubigeo/ubigeo_peru_2016_provincias.json'
+import distritos from '@/data/json-ubigeo/ubigeo_peru_2016_distritos.json'
 
 const rol = ref('');
 const companyImage = ref(null);
@@ -16,6 +21,28 @@ const username = ref('');
 const password = ref('');
 const resolutionFile = ref(null);
 const unitDelimiter = ref('');
+
+// Computed: Provincias filtradas según 'department'
+const filteredProvincias = computed(() => {
+  if (!department.value) return []
+  return provincias.filter(prov => prov.department_id === department.value)
+})
+
+// Computed: Distritos filtrados según 'province'
+const filteredDistritos = computed(() => {
+  if (!province.value) return []
+  return distritos.filter(dist => dist.province_id === province.value)
+})
+
+// Watchers que resetean valores encadenados
+watch(department, () => {
+  province.value = ''
+  district.value = ''
+})
+
+watch(province, () => {
+  district.value = ''
+})
 
 const isPasswordVisible = ref(false);
 
@@ -64,7 +91,7 @@ const emit = defineEmits(['close']);
         <form>
           <!-- Rol -->
           <div class="grid grid-cols-3">
-            <div>
+            <div class="col-span-3 md:col-span-1">
               <label for="rol" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rol</label>
               <select id="rol" v-model="rol"
                       class="bg-gray-50 border border-gray-300 text-gray-900 mb-6 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
@@ -79,7 +106,7 @@ const emit = defineEmits(['close']);
           <!-- Datos de la empresa -->
           <h3 class="text-[16px] font-semibold text-colorTextLight dark:text-white">Datos de la empresa</h3>
           <div class="grid grid-cols-3 gap-x-6 gap-y-4 mt-4">
-            <div>
+            <div class="col-span-3 md:col-span-1">
               <label for="companyImage" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Imagen de
                 perfil</label>
               <input
@@ -89,50 +116,62 @@ const emit = defineEmits(['close']);
                   class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
             </div>
-            <div>
+            <div class="col-span-3 md:col-span-1">
               <label for="companyName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nombre de la
                 Empresa</label>
               <input type="text" id="companyName" v-model="companyName" placeholder="Ingrese el nombre de la empresa"
                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
-            <div>
+            <div class="col-span-3 md:col-span-1">
               <label for="ruc" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">RUC</label>
               <input type="text" id="ruc" v-model="ruc" placeholder="Ingrese el RUC"
                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
-            <div>
-              <label for="department"
-                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Departamento</label>
-              <input type="text" id="department" v-model="department" placeholder="Ingrese el departamento"
-                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <div class="col-span-3 md:col-span-1">
+              <label for="department" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Departamento</label>
+              <select id="department" v-model="department"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <option value="">Seleccione Departamento</option>
+                <option v-for="dep in departamentos" :key="dep.id" :value="dep.id">
+                  {{ dep.name }}
+                </option>
+              </select>
             </div>
-            <div>
-              <label for="province"
-                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Provincia</label>
-              <input type="text" id="province" v-model="province" placeholder="Ingrese la provincia"
-                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <div class="col-span-3 md:col-span-1">
+              <label for="province" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Provincia</label>
+              <select id="province" v-model="province" :disabled="!department"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <option value="">Seleccione Provincia</option>
+                <option v-for="prov in filteredProvincias" :key="prov.id" :value="prov.id">
+                  {{ prov.name }}
+                </option>
+              </select>
             </div>
-            <div>
-              <label for="district"
-                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Distrito</label>
-              <input type="text" id="district" v-model="district" placeholder="Ingrese el distrito"
-                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <div class="col-span-3 md:col-span-1">
+              <label for="district" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Distrito</label>
+              <select id="district" v-model="district" :disabled="!province"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                <option value="">Seleccione Distrito</option>
+                <option v-for="dist in filteredDistritos" :key="dist.id" :value="dist.id">
+                  {{ dist.name }}
+                </option>
+              </select>
             </div>
           </div>
           <!-- Datos del Contacto -->
           <h3 class="mt-6 text-[16px] font-semibold text-colorTextLight dark:text-white">Datos del Contacto</h3>
           <div class="grid grid-cols-3 gap-x-6 gap-y-4 mt-4">
-            <div>
+            <div class="col-span-3 md:col-span-1">
               <label for="contact" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Contacto</label>
               <input type="text" id="contact" v-model="contact" placeholder="Ingrese el nombre del contacto"
                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
-            <div>
+            <div class="col-span-3 md:col-span-1">
               <label for="phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Teléfono</label>
               <input type="tel" id="phone" v-model="phone" placeholder="Ingrese el teléfono"
                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
             </div>
-            <div>
+            <div class="col-span-3 md:col-span-1">
               <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
               <input type="email" id="email" v-model="email" placeholder="Ingrese el email"
                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-400 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
@@ -141,7 +180,7 @@ const emit = defineEmits(['close']);
           <!-- Datos de Acceso -->
           <h3 class="mt-6 text-[16px] font-semibold text-colorTextLight dark:text-white">Datos de Acceso</h3>
           <div class="grid grid-cols-2 gap-x-6 gap-y-4 mt-4">
-            <div>
+            <div class="col-span-2 md:col-span-1">
               <label for="username" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Usuario</label>
               <div class="flex">
                 <span
@@ -152,7 +191,7 @@ const emit = defineEmits(['close']);
                        class="rounded-none rounded-e-lg bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 block flex-1 min-w-0 w-full text-sm p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
               </div>
             </div>
-            <div class="relative">
+            <div class="relative col-span-2 md:col-span-1">
               <label for="password-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Contraseña</label>
               <div class="relative">
                 <input type="password" id="password-input" v-model="password" placeholder="Ingrese la contraseña"
@@ -169,7 +208,7 @@ const emit = defineEmits(['close']);
             <h3 class="mt-6 text-[16px] font-semibold text-colorTextLight dark:text-white">Perminos y
               Delimitaciones</h3>
             <div class="grid grid-cols-2 gap-x-6 gap-y-4 mt-4">
-              <div>
+              <div class="col-span-2 md:col-span-1">
                 <label for="resolutionFile" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Resolución
                   Municipal</label>
                 <input
@@ -179,7 +218,7 @@ const emit = defineEmits(['close']);
                     class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
               </div>
-              <div>
+              <div class="col-span-2 md:col-span-1">
                 <label for="unitDelimiter" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Delimitación
                   de unidades</label>
                 <input type="number" id="unitDelimiter" v-model="unitDelimiter"

@@ -107,7 +107,7 @@ const updatePageSize = (event) => {
 <template>
   <section>
     <header class="flex justify-between items-center">
-      <h1 class="text-colorText224 text-[28px] md:text-[32px] font-bold dark:text-white">
+      <h1 class="text-colorText333 text-[28px] md:text-[32px] font-bold dark:text-white">
         Usuarios
       </h1>
       <button @click="openAddModal" class="btn-primary">

@@ -11,18 +11,32 @@ import {
   IconRotate2
 } from '@tabler/icons-vue';
 import DriverAddDialog from "@/modules/municipalidad/dialogs/DriverAddDialog.vue";
-import UserAddDialog from "@/modules/admin/dialogs/UserAddDialog.vue";
-
+import DriverUpdateDialog from "@/modules/municipalidad/dialogs/DriverUpdateDialog.vue"; // Import DriverUpdateDialog
 
 const isAddModalOpen = ref(false);
+const isEditModalOpen = ref(false); // State for edit modal
+const selectedDriver = ref(null); // Store selected driver data
 
 const openAddModal = () => {
   isAddModalOpen.value = true;
-};
-const closeAddModal = () => {
-  isAddModalOpen.value = false;
+  document.body.style.overflow = 'hidden';
 };
 
+const closeAddModal = () => {
+  isAddModalOpen.value = false;
+  document.body.style.overflow = 'auto';
+};
+
+const openEditModal = (row) => {
+  selectedDriver.value = row; // Set selected driver data
+  isEditModalOpen.value = true;
+  document.body.style.overflow = 'hidden';
+};
+
+const closeEditModal = () => {
+  isEditModalOpen.value = false;
+  document.body.style.overflow = 'auto';
+};
 
 // ----- Filtros -----
 const searchQuery = ref('');
@@ -94,17 +108,12 @@ const updatePageSize = (event) => {
   pageSize.value = Number(event.target.value);
   currentPage.value = 1;
 };
-
-// ----- Función para editar conductor -----
-const openEditModal = (row) => {
-  console.log('Editar conductor:', row);
-};
 </script>
 
 <template>
   <section>
     <header>
-      <h1 class="text-colorText224 text-[28px] md:text-[32px] font-bold dark:text-white">
+      <h1 class="text-colorText333 text-[28px] md:text-[32px] font-bold dark:text-white">
         Gestión de Conductores
       </h1>
       <!-- Controladores -->
@@ -266,6 +275,7 @@ const openEditModal = (row) => {
   </section>
 
   <DriverAddDialog :isOpen="isAddModalOpen" @close="closeAddModal"/>
+  <DriverUpdateDialog :isOpen="isEditModalOpen" :driverData="selectedDriver" @close="closeEditModal"/> <!-- Ensure this line is present -->
 </template>
 
 <style scoped>

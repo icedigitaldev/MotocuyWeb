@@ -1,58 +1,48 @@
 <script setup>
-import { defineProps, defineEmits, ref, computed, onMounted, watch, nextTick } from 'vue'
-import { IconX, IconDeviceFloppy, IconSearch } from '@tabler/icons-vue'
+import { defineProps, defineEmits, ref, computed, watch, nextTick, onMounted } from 'vue'
+import { IconX, IconDeviceFloppy } from '@tabler/icons-vue'
 import { initFlowbite, Datepicker } from 'flowbite'
-import { fetchPlacaInfo } from '@/services/factiliza_service.js'
 
-// Props y eventos
 const props = defineProps({
   isOpen: Boolean,
+  unidad: {
+    type: Object,
+    default: () => ({})
+  },
+  conductores: {
+    type: Array,
+    default: () => []
+  }
 })
-const emit = defineEmits(['close', 'save'])
 
-// Campos reactivamente editables
+const emit = defineEmits(['close', 'update'])
+
+// Campos a editar
 const placa = ref('')
 const asociacion = ref('')
 const marca = ref('')
 const motor = ref('')
-const modelo = ref('')
-const color = ref('')
 const fechaEmision = ref('')
 const fechaVencimiento = ref('')
+const estado = ref(false) // Changed to ref for reactivity
 
-// Lista de conductores (ejemplo)
-const conductores = ref([
-  { licencia: 'ABC123', nombre: 'Juan Pérez' },
-  { licencia: 'XYZ987', nombre: 'María González' },
-  { licencia: 'AAA111', nombre: 'Pedro Ramírez' },
-  { licencia: 'BBB222', nombre: 'Ana López' },
-  { licencia: 'CCC333', nombre: 'Carlos Sánchez' },
-  { licencia: 'DDD444', nombre: 'Luisa Martínez' },
-  { licencia: 'EEE555', nombre: 'Jorge Fernández' },
-  { licencia: 'FFF666', nombre: 'Sofía Gómez' },
-])
-
-// Buscador de conductores
+// Manejo del dropdown de conductores (reutilizamos la prop conductores)
 const searchQuery = ref('')
 const isDropdownOpen = ref(false)
 const conductorSeleccionado = ref(null)
 
-// Filtrado de conductores por nombre/licencia
+// Computed para filtrar conductores según query
 const filteredConductores = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
-  return conductores.value.filter((conductor) =>
-    conductor.licencia.toLowerCase().includes(query) ||
-    conductor.nombre.toLowerCase().includes(query)
-  )
+  return props.conductores.filter((c) => {
+    return (
+      c.licencia.toLowerCase().includes(query) ||
+      c.nombre.toLowerCase().includes(query)
+    )
+  })
 })
 
-// Seleccionar conductor
-const seleccionarConductor = (conductor) => {
-  conductorSeleccionado.value = conductor
-  isDropdownOpen.value = false
-}
-
-// Cerrar el dropdown al hacer clic fuera
+// Cerrar dropdown si se hace clic fuera
 const cerrarDropdown = (event) => {
   if (!event.target.closest('.dropdown-container')) {
     isDropdownOpen.value = false
@@ -60,90 +50,83 @@ const cerrarDropdown = (event) => {
 }
 onMounted(() => {
   document.addEventListener('click', cerrarDropdown)
-  // Si ya está abierto, inicializar datepickers
-  if (props.isOpen) initDatepickers()
 })
 
-const isLoading = ref(false)
-const nullMessage = ref('')
+// Seleccionar un conductor
+const seleccionarConductor = (conductor) => {
+  conductorSeleccionado.value = conductor
+  isDropdownOpen.value = false
+}
 
-const showNullMessage = (message) => {
-  nullMessage.value = message;
-  setTimeout(() => {
-    nullMessage.value = '';
-  }, 3000);
-};
+// Cuando se abra el modal (isOpen = true) y tengamos la unidad, cargamos valores
+watch(
+  () => props.isOpen,
+  (val) => {
+    if (val && props.unidad) {
+      placa.value = props.unidad.placa || ''
+      asociacion.value = props.unidad.asociacion || ''
+      marca.value = props.unidad.marca || ''
+      motor.value = props.unidad.motor || ''
+      // Suponiendo que la expedición de la tabla = fechaEmision aquí
+      fechaEmision.value = props.unidad.fechaEmision || props.unidad.expedicion || ''
+      fechaVencimiento.value = props.unidad.fechaVencimiento || ''
+      estado.value = props.unidad.estado || false // Initialize estado from props
+      
+      // Buscar el conductor en el array que coincida por nombre
+      if (props.unidad.conductor) {
+        conductorSeleccionado.value =
+          props.conductores.find(
+            (c) =>
+              c.nombre.toLowerCase() === props.unidad.conductor.toLowerCase()
+          ) || null
+      } else {
+        conductorSeleccionado.value = null
+      }
 
+      // Tras asignar, inicializamos datepickers
+      nextTick(() => {
+        initDatepickers()
+      })
+    }
+  },
+  { immediate: true }
+)
 
-const handlePlacaEnter = async () => {
-  if (!placa.value.trim()) {
-    showNullMessage('La placa está vacía');
-    return;
-  }
-
-  isLoading.value = true;
-  try {
-    const data = await fetchPlacaInfo(placa.value);
-    // Ajusta estas asignaciones a la estructura real de tu API
-    marca.value = data.data.marca || '';
-    motor.value = data.data.motor || '';
-    modelo.value = data.data.modelo || '';
-    color.value = data.data.color || '';
-    console.log('Datos de la API:', data);
-  } catch (err) {
-    console.error('Error al obtener datos de la placa:', err);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-// Watch para inicializar datepickers cuando se abra el modal
-watch(() => props.isOpen, (newVal) => {
-  if (newVal) {
-    nextTick(() => {
-      initDatepickers()
-    })
-  }
-})
-
-// Inicializa los datepickers de Flowbite
+// Inicializamos Flowbite datepickers
 const initDatepickers = () => {
-  const fechaEmisionInput = document.getElementById('fechaEmision')
+  const fechaEmisionInput = document.getElementById('fechaEmisionInput')
   const fechaVencimientoInput = document.getElementById('fechaVencimientoInput')
 
   if (fechaEmisionInput && !fechaEmisionInput._datepicker) {
     new Datepicker(fechaEmisionInput, {
       format: 'yyyy-mm-dd',
       autohide: true,
-      orientation: 'auto',
+      orientation: 'auto'
     })
   }
   if (fechaVencimientoInput && !fechaVencimientoInput._datepicker) {
     new Datepicker(fechaVencimientoInput, {
       format: 'yyyy-mm-dd',
       autohide: true,
-      orientation: 'auto',
+      orientation: 'auto'
     })
   }
 }
 
-// Para un botón manual de "Buscar" (opcional)
-const consultarPlaca = () => {
-  handlePlacaEnter()
-}
-
-// Función para emitir el guardado
-const handleSave = () => {
-  emit('save', {
-    placa,
-    asociacion,
-    marca,
-    motor,
-    modelo,
-    color,
-    fechaEmision,
-    fechaVencimiento,
-    conductorSeleccionado
+// Al guardar, emitimos 'update' con los campos
+const guardarCambios = () => {
+  emit('update', {
+    // aquí mezclas lo que necesites
+    placa: placa.value,
+    asociacion: asociacion.value,
+    marca: marca.value,
+    motor: motor.value,
+    fechaEmision: fechaEmision.value,
+    fechaVencimiento: fechaVencimiento.value,
+    estado: estado.value, // Include estado in the update
+    conductor: conductorSeleccionado.value
+      ? conductorSeleccionado.value.nombre
+      : ''
   })
 }
 </script>
@@ -156,12 +139,12 @@ const handleSave = () => {
     <div
       class="relative p-4 w-full max-w-3xl max-h-full bg-white rounded-lg shadow-lg dark:bg-gray-700 overflow-y-auto"
     >
-      <!-- Header -->
+      <!-- Modal header -->
       <div
         class="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600 border-gray-200"
       >
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-          Nueva unidad
+          Editar unidad
         </h3>
         <button
           @click="emit('close')"
@@ -171,10 +154,9 @@ const handleSave = () => {
         </button>
       </div>
 
-      <!-- Body -->
+      <!-- Modal body -->
       <div class="px-6 py-5 space-y-4">
-        <!-- Form -->
-        <form @submit.prevent="handleSave">
+        <form @submit.prevent="guardarCambios">
           <div class="grid grid-cols-2 gap-x-6 gap-y-4 mt-4">
             <!-- Placa -->
             <div class="col-span-2 md:col-span-1">
@@ -184,51 +166,15 @@ const handleSave = () => {
               >
                 Placa
               </label>
-              <div class="flex gap-2">
-                <input
-                  type="text"
-                  id="placa"
-                  v-model="placa"
-                  placeholder="Ingrese la placa"
-                  @keydown.enter.prevent="handlePlacaEnter"
-                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-500 rounded-lg
-                         focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
-                         dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-                <span>{{ nullMessage }}</span>
-                <!-- Botón opcional para buscar manualmente -->
-                <button
-                  type="button"
-                  data-tip="Validar placa"
-                  @click="consultarPlaca"
-                  class="tooltip inline-flex items-center px-3 rounded-lg border bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-white dark:hover:bg-gray-500"
-                >
-                  <template v-if="isLoading">
-                    <div role="status">
-                      <svg
-                        aria-hidden="true"
-                        class="inline w-4 h-4 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
-                        viewBox="0 0 100 101"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                          fill="currentColor"
-                        />
-                        <path
-                          d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                          fill="currentFill"
-                        />
-                      </svg>
-                      <span class="sr-only">Loading...</span>
-                    </div>
-                  </template>
-                  <template v-else>
-                    <IconSearch />
-                  </template>
-                </button>
-              </div>
+              <input
+                type="text"
+                id="placa"
+                v-model="placa"
+                placeholder="Ingrese la placa"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-500 rounded-lg
+                       focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                       dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
             </div>
 
             <!-- Asociación -->
@@ -288,45 +234,7 @@ const handleSave = () => {
               />
             </div>
 
-            <!-- Modelo -->
-            <div class="col-span-2 md:col-span-1">
-              <label
-                for="modelo"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Modelo
-              </label>
-              <input
-                type="text"
-                id="modelo"
-                v-model="modelo"
-                placeholder="Ingrese el modelo"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-500 rounded-lg
-                       focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
-                       dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-            </div>
-
-            <!-- Color -->
-            <div class="col-span-2 md:col-span-1">
-              <label
-                for="color"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Color
-              </label>
-              <input
-                type="text"
-                id="color"
-                v-model="color"
-                placeholder="Ingrese el color"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm placeholder-gray-500 rounded-lg
-                       focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
-                       dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-            </div>
-
-            <!-- Tarjeta de circulación -->
+            <!-- Tarjeta de circulación o documento de verificación -->
             <div class="col-span-2">
               <h3 class="col-span-2 mb-4 mt-2 text-colorTextLight dark:text-white">
                 Tarjeta de circulación o documento de verificación
@@ -335,7 +243,7 @@ const handleSave = () => {
                 <!-- Fecha de Emisión -->
                 <div class="col-span-2 md:col-span-1">
                   <label
-                    for="fechaEmision"
+                    for="fechaEmisionInput"
                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                   >
                     Fecha de emisión
@@ -358,10 +266,10 @@ const handleSave = () => {
                     </div>
                     <input
                       datepicker
-                      id="fechaEmision"
+                      id="fechaEmisionInput"
                       v-model="fechaEmision"
                       type="text"
-                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       placeholder="Seleccione fecha de emisión"
                     />
                   </div>
@@ -370,7 +278,7 @@ const handleSave = () => {
                 <!-- Fecha de Vencimiento -->
                 <div class="col-span-2 md:col-span-1">
                   <label
-                    for="fechaVencimiento"
+                    for="fechaVencimientoInput"
                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                   >
                     Fecha de vencimiento
@@ -396,7 +304,7 @@ const handleSave = () => {
                       id="fechaVencimientoInput"
                       v-model="fechaVencimiento"
                       type="text"
-                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       placeholder="Seleccione fecha de vencimiento"
                     />
                   </div>
@@ -430,7 +338,7 @@ const handleSave = () => {
                 >
                   <ul class="py-2">
                     <li
-                      v-for="conductor in filteredConductores"
+                      v-for="conductor of filteredConductores"
                       :key="conductor.licencia"
                       @click="seleccionarConductor(conductor)"
                       class="px-4 py-2 text-colorText333 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-500 cursor-pointer"
@@ -440,7 +348,6 @@ const handleSave = () => {
                   </ul>
                 </div>
               </div>
-
               <!-- Mostrar conductor seleccionado -->
               <div
                 v-if="conductorSeleccionado"
@@ -452,18 +359,27 @@ const handleSave = () => {
                 </span>
               </div>
             </div>
+
+            <!-- Estado Toggle -->
+            <div class="col-span-2 mt-4">
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="checkbox" v-model="estado" class="sr-only peer">
+                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-500 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+                <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">{{ estado ? 'Activo' : 'Inactivo' }}</span>
+              </label>
+            </div>
+
           </div>
         </form>
       </div>
 
-      <!-- Footer -->
+      <!-- Modal footer -->
       <div
         class="flex flex-row-reverse gap-6 items-center p-4 border-t border-gray-200 rounded-b dark:border-gray-600"
       >
         <button
-          type="submit"
+          @click="guardarCambios"
           class="flex items-center gap-2.5 text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700"
-          @click="handleSave"
         >
           <IconDeviceFloppy />
           Guardar
@@ -481,24 +397,20 @@ const handleSave = () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.dropdown-container {
-  position: relative;
-}
-.dropdown-container ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.dropdown-container li {
-  padding: 8px 12px;
-  cursor: pointer;
-}
-/* Estilos para pantallas pequeñas */
-@media (max-width: 640px) {
+  
+  
+  <style scoped>
   .dropdown-container {
-    width: 100%;
+    position: relative;
   }
-}
-</style>
+  .dropdown-container ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .dropdown-container li {
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  </style>
+  
