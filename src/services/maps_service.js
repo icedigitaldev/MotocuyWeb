@@ -1,12 +1,15 @@
 import { logInfo, logError } from '@/utils/logger.js';
 import { getEmergencyCodeFromUrl, watchEmergencyLocationRealtime } from '@/services/emergency_service.js';
+import { initializePolylineService, drawRoute, clearRoute, drawRouteFromCoordinates, fetchRouteDirectFromAPI } from '@/services/polyline_service.js';
 
 let googleMapsPromise = null;
 let emergencyMarker = null;
 let map = null;
 let locationWatchUnsubscribe = null;
+let userMarker = null;
 
-export { emergencyMarker, map };
+// Exportamos las referencias y funciones necesarias
+export { emergencyMarker, map, drawRoute, clearRoute, drawRouteFromCoordinates, fetchRouteDirectFromAPI };
 
 export const loadGoogleMapsAPI = () => {
     if (googleMapsPromise) {
@@ -49,17 +52,34 @@ export const loadGoogleMapsAPI = () => {
     return googleMapsPromise;
 };
 
+const createCustomMarkerElement = (iconPath) => {
+    const markerElement = document.createElement('div');
+    markerElement.style.display = 'block';
+    markerElement.style.width = '60px';
+    markerElement.style.height = '60px';
+
+    const img = document.createElement('img');
+    img.src = iconPath;
+    img.style.width = '100%';
+    img.style.height = '100%';
+
+    markerElement.appendChild(img);
+    return markerElement;
+};
+
 export const updateEmergencyMarker = (newPosition, title = 'Punto de emergencia') => {
     if (!newPosition) return false;
 
     if (map) {
         if (!emergencyMarker) {
-            // Crear el marcador si no existe
             try {
+                const alertMarkerContent = createCustomMarkerElement('/src/assets/images/alert.svg');
+
                 emergencyMarker = new google.maps.marker.AdvancedMarkerElement({
                     position: newPosition,
                     map: map,
-                    title: title
+                    title: title,
+                    content: alertMarkerContent
                 });
                 logInfo("Marcador de emergencia creado");
             } catch (error) {
@@ -67,12 +87,19 @@ export const updateEmergencyMarker = (newPosition, title = 'Punto de emergencia'
                 return false;
             }
         } else {
-            // Actualizar marcador existente
             emergencyMarker.position = newPosition;
             emergencyMarker.title = title;
         }
 
         map.setCenter(newPosition);
+
+        // Trazar ruta desde la ubicación del usuario hasta el punto de emergencia
+        if (userMarker) {
+            drawRoute(map, userMarker.position, newPosition)
+                .then(() => logInfo("Ruta trazada correctamente"))
+                .catch(err => logError("Error al trazar la ruta: " + err.message));
+        }
+
         logInfo(`Marcador de emergencia actualizado: Lat ${newPosition.lat}, Lng ${newPosition.lng}`);
         return true;
     }
@@ -111,6 +138,58 @@ export const startEmergencyTracking = (router) => {
     return true;
 };
 
+export const getUserLocation = () => {
+    return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const location = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    resolve(location);
+                },
+                (error) => {
+                    logError(`Error al obtener la ubicación: ${error.message}`);
+                    reject(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
+        } else {
+            const error = new Error("Geolocalización no soportada por este navegador");
+            logError(error.message);
+            reject(error);
+        }
+    });
+};
+
+export const getUserMarkerPosition = () => {
+    if (userMarker) {
+        return userMarker.position;
+    }
+    return null;
+};
+
+export const traceRouteToEmergency = async () => {
+    if (!map || !emergencyMarker || !userMarker) {
+        logError("No se puede trazar la ruta - faltan referencias");
+        return false;
+    }
+
+    try {
+        await drawRoute(map, userMarker.position, emergencyMarker.position);
+        logInfo("Ruta trazada correctamente");
+        return true;
+    } catch (error) {
+        logError("Error al trazar la ruta: " + error.message);
+        return false;
+    }
+};
+
 export const initializeMap = (mapContainer, router) => {
     return new Promise((resolve, reject) => {
         try {
@@ -126,6 +205,9 @@ export const initializeMap = (mapContainer, router) => {
                 mapTypeControl: true,
                 mapId: '3142516602f19200'
             });
+
+            // Inicializar el servicio de polilíneas
+            initializePolylineService();
 
             const hasEmergencyCode = startEmergencyTracking(router);
 
@@ -145,11 +227,19 @@ export const initializeMap = (mapContainer, router) => {
 
                         map.setCenter(userCoordinates);
 
-                        new google.maps.marker.AdvancedMarkerElement({
+                        const serenazgoMarkerContent = createCustomMarkerElement('/src/assets/images/serenazgo.svg');
+
+                        userMarker = new google.maps.marker.AdvancedMarkerElement({
                             position: userCoordinates,
                             map: map,
-                            title: 'Tu ubicación actual'
+                            title: 'Tu ubicación actual',
+                            content: serenazgoMarkerContent
                         });
+
+                        // Si ya existe un marcador de emergencia, trazar la ruta
+                        if (emergencyMarker) {
+                            traceRouteToEmergency();
+                        }
 
                         logInfo("Mapa inicializado - Ubicación actual del usuario");
                         resolve(map);
